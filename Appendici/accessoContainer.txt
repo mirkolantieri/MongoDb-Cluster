@@ -1,0 +1,13 @@
+L'accesso ai container avviene tramite Mongoshell  utilizzando il comando mongo mongodb://localhost:porta
+
+configServer1
+mongo mongodb://localhost:10000
+
+shard1server    
+mongo mongodb://localhost:11000
+
+shard2server2
+mongo mongodb://localhost:12001
+
+shard3server1
+mongo mongodb://localhost:13000

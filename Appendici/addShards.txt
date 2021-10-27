@@ -1,0 +1,8 @@
+
+L'aggiunga degli shards a mongos avviene tramite il comando sh.AddShard()
+
+sh.addShard("shard1rs/shard1server:27017")
+
+sh.addShard("shard2rs/shard2server1:27017,shard2server2:27017")
+
+sh.addShard("shard3rs/shard3server1:27017,shard3server2:27017,shard3server3:27017")

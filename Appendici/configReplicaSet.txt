@@ -1,0 +1,52 @@
+La replica dei set avviene tramite il comando rs.initiate() tramite mongo shell.
+
+
+
+Replica set config servers
+rs.initiate(
+  {
+    _id: "configrs",
+    configsvr: true,
+    members: [
+      { _id : 0, host : "configServer1:27017" },
+      { _id : 1, host : "configServer2:27017" },
+      { _id : 2, host : "configServer3:27017" }
+    ]
+  }
+)
+
+
+Replica set shard1server 
+rs.initiate(
+  {
+    _id: "shard1rs",
+    members: [
+      { _id : 0, host : "shard1server:27017" }
+    ]
+  }
+)
+
+
+Replica set shard2servers
+rs.initiate(
+  {
+    _id: "shard2rs",
+    members: [
+      { _id : 0, host : "shard2server1:27017" },
+      { _id : 1, host : "shard2server2:27017" }
+    ]
+  }
+)
+
+
+Replica set shard3servers
+rs.initiate(
+  {
+    _id: "shard3rs",
+    members: [
+      { _id : 0, host : "shard3server1:27017" },
+      { _id : 1, host : "shard3server2:27017" },
+      { _id : 2, host : "shard3server3:27017" }
+    ]
+  }
+)

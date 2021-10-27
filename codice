@@ -1,0 +1,190 @@
+
+docker exec -it shard1server bash
+docker logs shard1server
+
+
+###############################################
+docker-compose -f configServerCompose.yaml up -d
+...
+
+mongodbNetwork
+###############################################
+Replica set config servers
+configServer1
+mongo mongodb://localhost:10000
+
+rs.initiate(
+  {
+    _id: "configrs",
+    configsvr: true,
+    members: [
+      { _id : 0, host : "configServer1:27017" },
+      { _id : 1, host : "configServer2:27017" },
+      { _id : 2, host : "configServer3:27017" }
+    ]
+  }
+)
+###############################################
+Replica set shard1server    (single server replica set)
+
+mongo mongodb://localhost:11000
+
+rs.initiate(
+  {
+    _id: "shard1rs",
+    members: [
+      { _id : 0, host : "shard1server:27017" }
+    ]
+  }
+)
+###############################################
+Replica set shard2servers
+shard2server2
+mongo mongodb://localhost:12000
+
+rs.initiate(
+  {
+    _id: "shard2rs",
+    members: [
+      { _id : 0, host : "shard2server1:27017" },
+      { _id : 1, host : "shard2server2:27017" }
+    ]
+  }
+)
+###############################################
+Replica set shard3servers
+shard3server1
+mongo mongodb://localhost:13000
+
+rs.initiate(
+  {
+    _id: "shard3rs",
+    members: [
+      { _id : 0, host : "shard3server1:27017" },
+      { _id : 1, host : "shard3server2:27017" },
+      { _id : 2, host : "shard3server3:27017" }
+    ]
+  }
+)
+###############################################
+Add shards to mongos
+
+mongo mongodb://localhost:15000
+
+sh.addShard("shard1rs/shard1server:27017")
+
+sh.addShard("shard2rs/shard2server1:27017,shard2server2:27017")
+
+sh.addShard("shard3rs/shard3server1:27017,shard3server2:27017,shard3server3:27017")
+
+sh.status()
+
+db.stats()
+
+db.getLogComponents()
+
+db.setLogLevel(5, "command")
+db.setLogLevel(5, "control")
+db.setLogLevel(5, "query")
+db.setLogLevel(5, "replication")
+db.setLogLevel(5, "sharding")
+db.setLogLevel(5, "storage")
+db.setLogLevel(5, "write")
+db.setLogLevel(5, "ftdc")
+db.setLogLevel(5, "transaction")
+###############################################
+
+Access to mongos
+mongo mongodb://localhost:15000
+
+use myFirstDB
+db.createCollection("bios")
+sh.enableSharding("myFirstDB")
+sh.shardCollection("myFirstDB.bios", { "_id" : "hashed" })
+db.bios.getShardDistribution()
+
+# insert bios data
+
+db.bios.getShardDistribution() --> OUTPUT
+Shard shard1rs at shard1rs/shard1server:27017
+ data : 540B docs : 2 chunks : 2
+ estimated data per chunk : 270B
+ estimated docs per chunk : 1
+
+Shard shard2rs at shard2rs/shard2server1:27017,shard2server2:27017
+ data : 1KiB docs : 3 chunks : 2
+ estimated data per chunk : 670B
+ estimated docs per chunk : 1
+
+Shard shard3rs at shard3rs/shard3server1:27017,shard3server2:27017,shard3server3:27017
+ data : 1KiB docs : 5 chunks : 2
+ estimated data per chunk : 804B
+ estimated docs per chunk : 2
+
+Totals
+ data : 3KiB docs : 10 chunks : 6
+ Shard shard1rs contains 15.47% data, 20% docs in cluster, avg obj size on shard : 270B
+ Shard shard2rs contains 38.43% data, 30% docs in cluster, avg obj size on shard : 447B
+ Shard shard3rs contains 46.08% data, 50% docs in cluster, avg obj size on shard : 321B
+
+###############################################
+
+db.createCollection("countries")
+sh.shardCollection("myFirstDB.countries", { "Country Name" : 1 })
+
+collezione con sharding key range
+
+mongoimport --host localhost --port 15000 --db myFirstDB --collection countries --file countries-big.json
+
+db.countries.getShardDistribution()
+
+Shard shard2rs at shard2rs/shard2server1:27017,shard2server2:27017
+ data : 1.84MiB docs : 21640 chunks : 1
+ estimated data per chunk : 1.84MiB
+ estimated docs per chunk : 21640
+
+Totals
+ data : 1.84MiB docs : 21640 chunks : 1
+ Shard shard2rs contains 100% data, 100% docs in cluster, avg obj size on shard : 89B
+
+con la key range tutti i documenti finiscono in un solo shard
+##############################################
+
+db.createCollection("companies_range")
+sh.shardCollection("myFirstDB.companies_range", { "name" : 1, "permalink" : 1 })
+
+mongoimport --host localhost --port 15000 --db myFirstDB --collection companies_range --file companies.json
+
+db.companies_range.getShardDistribution()
+tutti i documenti in uno shard... il doppio dei documenti?
+########################################################
+
+
+db.createCollection("companies_hashed")
+sh.shardCollection("myFirstDB.companies_hashed", { "_id" : "hashed" })
+
+mongoimport --host localhost --port 15000 --db myFirstDB --collection companies_hashed --file companies.json
+
+db.companies_hashed.getShardDistribution()
+
+distribuzione bilanciata
+
+###################################################################
+
+mongoimport --host localhost --port 15000 --db myFirstDB --collection trades --file trades.json
+2020-02-11T15:09:06.807+0100 -- 2020-02-11T15:15:44.844+0100 --> circa 7 minuti
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
